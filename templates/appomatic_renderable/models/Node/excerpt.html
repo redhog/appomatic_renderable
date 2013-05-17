@@ -1,0 +1,25 @@
+<div onclick="window.location='{% block content_link %}{{obj.get_absolute_url}}{% endblock %}';" class="excerpt">
+  <div class="excerpt_title">
+    {% block content_title %}
+      <h2>{{ obj.title }}</h2>
+      {% if obj.published %}<div class="published">{{obj.published}}</div>{% endif %}
+    {% endblock %}
+  </div>
+  <div class="excerpt_content">
+    {% block content %}
+    {% endblock %}
+  </div>
+  <div class="excerpt_footer">
+    {% block footer %}
+      <div class="excerpt_buttons">
+        {% block buttons %}
+        {% endblock %}
+      </div>
+      <div class="tags">
+        {% for tag in obj.tags.all %}
+          <a href="{{tag.get_absolute_url}}"><i class="icon-tag"></i> {{tag.name}}</a>
+        {% endfor %}
+      </div>
+    {% endblock %}
+  </div>
+</div>

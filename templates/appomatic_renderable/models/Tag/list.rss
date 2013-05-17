@@ -1,0 +1,7 @@
+{% load endless %}
+{% block list %}
+  {% paginate 10 obj.nodes.all as paginated_nodes %}
+  {% for node in paginated_nodes %}
+    {{ node.render_as.item__rss|safe }}
+  {% endfor %}
+{% endblock %}

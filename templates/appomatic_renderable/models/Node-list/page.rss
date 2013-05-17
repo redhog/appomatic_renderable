@@ -1,0 +1,20 @@
+{% load endless %}<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    {% block header %}
+      <title>Renderable</title>
+      <description>Renderable</description>
+      <link>{{site_url}}{% url 'appomatic_renderable.views.node' url='' %}?style=rss</link>
+      <atom:link href="{{site_url}}{% url 'appomatic_renderable.views.node' url='' %}?style=rss" rel="self" type="application/rss+xml" />
+      <lastBuildDate>{% now "r" %}</lastBuildDate>
+      <pubDate>{% now "r" %}</pubDate>
+      <ttl>1800</ttl>
+    {% endblock %}
+    {% block items %}
+      {% paginate 10 objs as paginated_objs %}
+      {% for node in paginated_objs %}
+        {{node.render_as.item__rss|safe}}
+      {% endfor %}
+    {% endblock %}
+  </channel>
+</rss>

@@ -1,0 +1,16 @@
+{% extends 'appomatic_renderable/models/Node/excerpt.html' %}
+
+{% block content_link %}{{ obj.content.url }}{% endblock %}
+
+{% block content %}
+  <div class="subheading">Format: {{obj.content.typename}}</div>
+  <div class="excerpt_content_body">
+    {{ obj.description|default:"" }}
+  </div>
+  {{ block.super }}
+{% endblock %}
+
+{% block buttons %}
+  {{ block.super }}
+  <a href="{{ obj.get_absolute_url }}"><i class=" icon-folder-close-alt"></i> Info</a>
+{% endblock %}

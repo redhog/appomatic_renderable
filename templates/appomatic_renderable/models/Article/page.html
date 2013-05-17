@@ -1,0 +1,29 @@
+{% extends 'appomatic_renderable/models/Node/page.html' %}
+
+{% block infobox %}
+  {{ block.super }}
+  {{obj.extra|safe}}
+{% endblock %}
+
+{% block flatter_description %}
+  {% if obj.summary %}
+    <em>{{ obj.summary|striptags }}</em>
+  {% else %}
+    {{ obj.content|truncatewords_html:50|striptags }}
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+  {% if obj.summary %}
+    <em class="summarytext">{{ obj.summary|safe }}</em>
+  {% endif %}
+  {% if obj.image %}
+    <div class="illustration">
+      {{obj.image.render_as.inline|safe}}
+    </div>
+  {% endif %}
+  <div class="bodytext {% if obj.image %}hasimage{% endif %}">
+    {{ obj.content|safe }}
+  </div>
+  {{ block.super }}
+{% endblock %}

@@ -1,0 +1,9 @@
+{% extends 'appomatic_renderable/models/Node/item.rss' %}
+
+{% block content %}
+  {% if obj.summary %}
+    &lt;em&gt;{{ obj.summary|escape }}&lt;/em&gt;
+  {% endif %}
+  {{ obj.content|escape }}
+  {{ block.super }}
+{% endblock %}

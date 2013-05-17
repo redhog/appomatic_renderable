@@ -1,0 +1,10 @@
+{% load endless %}
+{% block list %}
+  {% paginate 10 obj.items as paginated_nodes %}
+  <div class="excerpts">
+    {% for node in paginated_nodes %}
+      {{ node.render_as.excerpt|safe }}
+    {% endfor %}
+  </div>
+  <div class="pagination">{% show_pages %}</div>
+{% endblock %}

@@ -1,0 +1,18 @@
+<item>
+  {% block item %}
+    <title>{{ obj.title }}</title>
+    <description>
+      {% block content %}
+      {% endblock %}
+    </description>
+    {% if obj.author %}
+      <author>{{obj.author.get_full_name}} &lt;{% if obj.author.email %}{{obj.author.email}}{% else %}{{obj.author.username}}@example.com{% endif %}&gt;</author>
+    {% endif %}
+    <link>{{site_url}}{{obj.get_absolute_url}}</link>
+    <guid>{{site_url}}{{obj.get_absolute_url}}</guid>
+    <pubDate>{{obj.published|date:"r"}}</pubDate>
+    {% for tag in obj.tags.all %}
+      <category>{{tag.name}}</category>
+    {% endfor %}
+  {% endblock %}
+</item>

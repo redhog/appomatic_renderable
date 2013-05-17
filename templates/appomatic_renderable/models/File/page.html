@@ -1,0 +1,7 @@
+{% extends 'appomatic_renderable/models/Node/page.html' %}
+
+{% block content %}
+  <div class="subheading">Format: {{obj.content.typename}}</div>
+  {{ obj.description|default:"" }}
+  <a href="{{ obj.content.url }}">Download</a>
+{% endblock %}

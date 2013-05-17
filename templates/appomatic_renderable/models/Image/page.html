@@ -1,0 +1,7 @@
+{% extends 'appomatic_renderable/models/Node/page.html' %}
+
+{% block content %}
+  {{ obj.description|default:"" }}
+  <a href="{{ obj.content.url }}"><img src="{{ obj.content.url }}" style="width:100%;"></a>
+  {{block.super}}
+{% endblock %}

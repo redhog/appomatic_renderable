@@ -1,0 +1,6 @@
+{% extends 'appomatic_renderable/models/Node/page.html' %}
+
+{% block content %}
+  {{obj.render_as.list|safe}}
+  {{ block.super }}
+{% endblock %}

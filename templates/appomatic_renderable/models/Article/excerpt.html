@@ -1,0 +1,12 @@
+{% extends 'appomatic_renderable/models/Node/excerpt.html' %}
+
+{% block content %}
+  <div class="excerpt_content_body">
+    {% if obj.summary %}
+      <em>{{ obj.summary|safe }}</em>
+    {% else %}
+      {{ obj.content|truncatewords_html:50|safe }}
+    {% endif %}
+  </div>
+  {{ block.super }}
+{% endblock %}

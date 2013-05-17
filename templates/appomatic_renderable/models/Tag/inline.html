@@ -1,0 +1,10 @@
+<div class="inline">
+  {% block content_title %}
+    {{obj.render_as.navigation|safe}}
+    <h1>{{ obj.name }}</h1>
+  {% endblock %}
+
+  {% block content %}
+    {{obj.render_as.list|safe}}
+  {% endblock %}
+</div>

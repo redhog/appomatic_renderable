@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block meta %}
+  <script type="text/javascript" src="{{STATIC_URL}}/ckeditor/ckeditor/ckeditor.js"></script>
+
+  {{block.super}}
+{% endblock %}
+
+{% block menu %}
+  {{Node.get.sidebar__left.render_as.list}}
+{% endblock %}
+
+{% block boxes %}
+  {{Node.get.sidebar__right.render_as.list}}
+{% endblock %}

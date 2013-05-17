@@ -1,0 +1,11 @@
+{% extends 'appomatic_renderable/models/Node/item.rss' %}
+
+{% block content %}
+  {{block.super}}
+  {{ obj.description|default:""|escape }}
+{% endblock %}
+
+{% block item %}
+  {{block.super}}
+  <enclosure url="{{site_url}}{{obj.content.url}}" type="{{obj.content.type}}" />
+{% endblock %}

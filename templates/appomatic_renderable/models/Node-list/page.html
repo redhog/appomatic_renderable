@@ -1,0 +1,21 @@
+{% extends 'appomatic_renderable/base.html' %}
+{% load endless %}
+
+{% block boxes %}
+  <div class="infobox">
+    {% block infobox %}
+      <div><a href="{% url 'appomatic_renderable.views.node' url='' %}?style=page.rss"><i class="icon-rss"></i> RSS feed</a></div>
+    {% endblock %}
+  </div>
+  {{block.super}}
+{% endblock %}
+
+{% block content %}
+  {% paginate 10 objs as paginated_objs %}
+  <div class="vertical excerpts">
+    {% for node in paginated_objs %}
+      {{node.render_as.excerpt|safe}}
+    {% endfor %}
+  </div>
+  <div class="pagination">{% show_pages %}</div>
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends 'appomatic_renderable/base.html' %}
+
+{% block body_class %}{{obj.types}}{% endblock %}
+
+{% block boxes %}
+  {% if request.user.is_staff %}
+    <div class="infobox">
+      <a href="{{obj.get_admin_url}}"><i class="icon-edit"></i> Edit</a>
+    </div>
+  {% endif %}
+  <div class="infobox">
+    {% block infobox %}
+      {% if obj.tag %}
+        <div><a href="{{obj.get_absolute_url}}?style=page.rss"><i class="icon-rss"></i> RSS feed</a></div>
+      {% endif %}
+      <hr />
+    {% endblock %}
+  </div>
+  {% if obj.tags.all %}
+    <div class="infobox tags">
+      {% for tag in obj.tags.all %}
+        <a href="{{tag.get_absolute_url}}"><i class="icon-tag"></i> {{tag.name}}</a>
+      {% endfor %}
+    </div>
+  {% endif %}
+  {{block.super}}
+{% endblock %}
+
+{% block content_title %}
+  <h1>{{ obj.title }}</h1>
+  <div class="breadcrumb">
+    <a href="/">Home</a>
+    {% for item in obj.breadcrumb %}
+      &gt;&gt; <a href="{{item.get_absolute_url}}">{{item.name}}</a>
+    {% endfor %}
+  </div>
+  {% if obj.published %}<div class="published">{{obj.published}}</div>{% endif %}
+{% endblock %}
+
+{% block content %}
+  {% if obj.tag.get %}
+    {{ obj.tag.get.render_as.list|safe }}
+  {% endif %}
+{% endblock %}
+
+{% block footer %}
+  {% if obj.author or obj.license %}
+    <div class="copyright">
+      {% if obj.author %}
+        <div class="authors">
+          Copyright {{obj.published}} by {{obj.author.username}} ({{obj.author.get_full_name}}) &lt;<a href="mailto:{{obj.author.email}}">{{obj.author.email}}</a>&gt; 
+         .
+        </div>
+      {% endif %}
+      {% if obj.license %}
+        <div class="license">
+          This page is subject to <a href="{{obj.license.url}}">{{obj.license.name}}</a>.
+        </div>
+      {% endif %}
+    </div>
+  {% endif %}
+{% endblock %}
