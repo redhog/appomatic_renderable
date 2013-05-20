@@ -3,7 +3,7 @@ import mptt.models
 import fcdjangoutils.modelhelpers
 import fcdjangoutils.middleware
 import fcdjangoutils.fields
-
+import fcdjangoutils.jsonview
 import datetime
 import django.template
 import django.utils.http
@@ -28,20 +28,35 @@ def get_basetypes(t):
 TypeType = type
 
 class Renderable(fcdjangoutils.modelhelpers.SubclasModelMixin):
+    def get_admin_url(self):
+        return django.core.urlresolvers.reverse(
+            'admin:%s_%s_change' % (self._meta.app_label,
+                                    self._meta.module_name),
+            args=[self.id])
+
     @property
     def types(self):
         return ' '.join(t.replace(".", "-") for t in get_basetypes(TypeType(self)))
 
     @fcdjangoutils.modelhelpers.subclassproxy
+    def render_as(self):
+        obj = self
+        class Res(object):
+            def __getattribute__(self, style):
+                style = style.replace("__", ".")
+                if "." not in style: style = style + ".html"
+                return obj.render(fcdjangoutils.middleware.get_request(), style)
+        return Res()
+
     def context(self, request, style):
         return {'obj': self.subclassobject}
 
-    @fcdjangoutils.modelhelpers.subclassproxy
     def handle_methods(self, request, style):
-        method = 'handle_' + request.REQUEST.get('method', 'read')
-        if not hasattr(self, method):
+        method = 'handle__' + request.REQUEST.get('method', 'read')
+        if hasattr(self, method):
+            return getattr(self, method)(request, style)
+        else:
             return {}
-        return getattr(self, method)(request, style)
 
     @fcdjangoutils.modelhelpers.subclassproxy
     def render(self, request, style = None, context_arg = {}):
@@ -54,14 +69,47 @@ class Renderable(fcdjangoutils.modelhelpers.SubclasModelMixin):
         context = self.context(request, style)
         context.update(self.handle_methods(request, style))
         context.update(context_arg)
-        return django.template.loader.select_template(
-            ["%s%s/%s" % (t.replace(".", "/"), subtype, style)
-             for t in get_basetypes(type(self))]
-            ).render(
-            django.template.RequestContext(
-                    request,
-                    context))
+
+        method = 'render__' + style.replace(".", "__")
+        if hasattr(self, method):
+            return getattr(self, method)(request, context)
+        else:
+            return django.template.loader.select_template(
+                ["%s%s/%s" % (t.replace(".", "/"), subtype, style)
+                 for t in get_basetypes(type(self))]
+                ).render(
+                django.template.RequestContext(
+                        request,
+                        context))
     
+    def render__adminlink__html(self, request, context):
+        # Handle translation here
+        return u"<a href='%s'>Edit</a>" % (self.get_admin_url(),)
+
+    def render__link__html(self, request, context):
+        return u"<a href='%s'>%s</a>" % (self.get_absolute_url(), self)
+
+    def render__oembedlink__html(self, request, context):
+        return u"<link rel='alternate' type='application/json+oembed' href='%s' title='%s' />" % (
+            self.get_absolute_url() + "?style=oembed",
+            self)
+
+    def render__oembed(self, request, context):
+        return fcdjangoutils.jsonview.to_json(self.oembed(request, context))
+
+    oembedwidth = 400
+    oembedheight = 300
+
+    def oembed(self, request, context):
+        return {
+            'type': 'rich',
+            'version': 1.0,
+            "provider_url": request.build_absolute_uri('/')[:-1],
+            'html': self.render(request, 'excerpt.html'),
+            'width': self.oembedwidth,
+            'height': self.oembedheight
+            }
+
     @classmethod
     def list_context(cls, request):
         return {"objs": cls.objects.all()}
@@ -80,22 +128,6 @@ class Renderable(fcdjangoutils.modelhelpers.SubclasModelMixin):
             django.template.RequestContext(
                     request,
                     context))
-
-    @fcdjangoutils.modelhelpers.subclassproxy
-    def render_as(self):
-        obj = self
-        class Res(object):
-            def __getattribute__(self, style):
-                style = style.replace("__", ".")
-                if "." not in style: style = style + ".html"
-                return obj.render(fcdjangoutils.middleware.get_request(), style)
-        return Res()
-
-    def get_admin_url(self):
-        return django.core.urlresolvers.reverse(
-            'admin:%s_%s_change' % (self._meta.app_label,
-                                    self._meta.module_name),
-            args=[self.id])
 
 
 class Tag(mptt.models.MPTTModel, Renderable):
@@ -157,6 +189,13 @@ class Tag(mptt.models.MPTTModel, Renderable):
             cls._menutree = menutree()
         return cls._menutree
 
+    def oembed(self, request, context):
+        res = Renderable.oembed(self, request, context)
+        res.update({
+                'title': self.name,
+                })
+        return res
+
 class Source(django.db.models.Model):
     tool = django.db.models.CharField(max_length=50)
     argument = django.db.models.CharField(max_length=1024)
@@ -190,8 +229,8 @@ class Node(django.db.models.Model, Renderable):
         return django.core.urlresolvers.reverse('appomatic_renderable.views.node', kwargs={'url': self.url[1:]})
 
     def breadcrumb(self):
-        if self.tag:
-            return self.tag.get().breadcrumb()
+        #if self.tag:
+        #    return self.tag.get().breadcrumb()
         tags = self.tags.all()
         if len(tags):
             return tags[0].breadcrumb(include_self=True)
@@ -211,6 +250,15 @@ class Node(django.db.models.Model, Renderable):
     @classmethod
     def list_context(cls, request, style):
         return {"objs": cls.objects.filter(~Q(published=None))}
+
+    def oembed(self, request, context):
+        res = Renderable.oembed(self, request, context)
+        res.update({
+                'title': self.title,
+                'author_name': "%s (%s)" % (self.author.username, self.author.get_full_name()),
+                'author_url': self.author.get_absolute_url()
+                })
+        return res
 
 
 class Collection(Node):
@@ -248,6 +296,19 @@ class File(Node):
 class Image(Node):
     content = django.db.models.ImageField(max_length=2048, upload_to='.')
     description = ckeditor.fields.RichTextField(blank=True, null=True)
+
+    def oembed(self, request, context):
+        return {
+            'type': 'photo',
+            'version': 1.0,
+            "provider_url": request.build_absolute_uri('/')[:-1],
+            'url': self.content.url,
+            'width': self.content.width,
+            'height': self.content.height,
+            'title': self.title,
+            'author_name': "%s (%s)" % (self.author.username, self.author.get_full_name()),
+            'author_url': self.author.get_absolute_url()
+            }
 
 class StaticTemplate(Node):
     render_subtype = django.db.models.CharField(
