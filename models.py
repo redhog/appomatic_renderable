@@ -13,6 +13,7 @@ import django.db.models
 import django.db.models.fields.related
 import django.utils.functional
 import django.db.models.query
+import django.utils.html
 from django.db.models import Q
 from django.conf import settings
 
@@ -90,12 +91,24 @@ class Renderable(fcdjangoutils.modelhelpers.SubclasModelMixin):
         return u"<a href='%s'>%s</a>" % (self.get_absolute_url(), self)
 
     def render__oembedlink__html(self, request, context):
-        return u"<link rel='alternate' type='application/json+oembed' href='%s' title='%s' />" % (
-            self.get_absolute_url() + "?style=oembed",
-            self)
+        return u"""
+          <link rel='alternate' type='application/json+oembed' href='%(url)s?style=oembed&format=json' title='%(title)s' />
+          <link rel='alternate' type='text/xml+oembed' href='%(url)s?style=oembed&format=xml' title='%(title)s' />
+        """ % {
+            'url': self.get_absolute_url() + "",
+            'title': self}
 
     def render__oembed(self, request, context):
-        return fcdjangoutils.jsonview.to_json(self.oembed(request, context))
+        format = request.GET.get('format', 'json')
+        data = self.oembed(request, context)
+        if format == 'json':
+            return fcdjangoutils.jsonview.to_json(data)
+        elif format == 'xml':
+            return '<?xml version="1.0" encoding="utf-8" standalone="yes"?><oembed>%s</oembed>' % ('\n'.join(
+                    '<%(key)s>%(value)s</%(key)s>' % {'key':key, 'value':django.utils.html.escape(unicode(value).encode('utf-8'))}
+                    for (key, value) in data.iteritems()),)
+        else:
+            raise Exception("Unknown format %s" % (format,))
 
     oembedwidth = 400
     oembedheight = 300
