@@ -17,10 +17,13 @@ import django.utils.html
 from django.db.models import Q
 from django.conf import settings
 
-def get_basetypes(t):
+def get_typename(t, separator = "."):
+    return ("%s.%s" % (t.__module__, t.__name__)).replace(".", separator)
+
+def get_basetypes(t, separator = "."):
     basetypes = []
     def get_basetypes(t):
-        basetypes.append("%s.%s" % (t.__module__, t.__name__))
+        basetypes.append(get_typename(t))
         for tt in t.__bases__:
             get_basetypes(tt)
     get_basetypes(t)
@@ -29,15 +32,27 @@ def get_basetypes(t):
 TypeType = type
 
 class Renderable(fcdjangoutils.modelhelpers.SubclasModelMixin):
+    @fcdjangoutils.modelhelpers.subclassproxy
     def get_admin_url(self):
         return django.core.urlresolvers.reverse(
             'admin:%s_%s_change' % (self._meta.app_label,
                                     self._meta.module_name),
             args=[self.id])
 
+    @fcdjangoutils.modelhelpers.subclassproxy
     @property
     def types(self):
-        return ' '.join(t.replace(".", "-") for t in get_basetypes(TypeType(self)))
+        return ' '.join(get_basetypes(TypeType(self), "-"))
+
+    @fcdjangoutils.modelhelpers.subclassproxy
+    @property
+    def type(self):
+        return get_typename(TypeType(self), "-")
+
+    @fcdjangoutils.modelhelpers.subclassproxy
+    @property
+    def type_name(self):
+        return TypeType(self).__name__
 
     @fcdjangoutils.modelhelpers.subclassproxy
     def render_as(self):
