@@ -16,6 +16,8 @@ import django.db.models.query
 import django.utils.html
 from django.db.models import Q
 from django.conf import settings
+import csv
+import StringIO
 
 def get_typename(t, separator = "."):
     return ("%s.%s" % (t.__module__, t.__name__)).replace(".", separator)
@@ -139,24 +141,53 @@ class Renderable(fcdjangoutils.modelhelpers.SubclasModelMixin):
             }
 
     @classmethod
-    def list_context(cls, request):
+    def list_context(cls, request, style):
         return {"objs": cls.objects.all()}
 
     @classmethod
-    def render_list(cls, request, style = None, context_arg = {}):
+    def list_handle_methods(cls, request, style):
+        method = 'list_handle__' + request.REQUEST.get('method', 'read')
+        if hasattr(cls, method):
+            return getattr(cls, method)(request, style)
+        else:
+            return {}
+
+    @classmethod
+    def list_render(cls, request, style = None, context_arg = {}):
         if style is None:
             style = request.GET.get("style", "page.html")
             if '/' in style or style in (".", ".."): raise Exception("Bad style")
+        subtype = ''
+        if hasattr(cls, 'render_subtype'):
+            subtype = "/" + cls.render_subtype
         context = cls.list_context(request, style)
+        context.update(cls.list_handle_methods(request, style))
         context.update(context_arg)
-        return django.template.loader.select_template(
-            ["%s-list/%s" % (t.replace(".", "/"), style)
-             for t in get_basetypes(cls)]
-            ).render(
-            django.template.RequestContext(
-                    request,
-                    context))
 
+        method = 'list_render__' + style.replace(".", "__")
+        if hasattr(cls, method):
+            return getattr(cls, method)(request, context)
+        else:
+            return django.template.loader.select_template(
+                ["%s-list/%s" % (t.replace(".", "/"), style)
+                 for t in get_basetypes(cls)]
+                ).render(
+                django.template.RequestContext(
+                        request,
+                        context))
+
+    @classmethod
+    def list_render__csv(cls, request, context):
+        f = StringIO.StringIO()
+        w = csv.writer(f)
+        header = None
+        for row in context['objs'].values():
+            if header is None:
+                header = row.keys()
+                header.sort()
+                w.writerow(header)
+            w.writerow([row[col] for col in header])
+        return f.getvalue()
 
 class Tag(mptt.models.MPTTModel, Renderable):
     name = django.db.models.CharField(max_length=128)

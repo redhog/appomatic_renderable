@@ -8,7 +8,7 @@ def node(request, url):
     if len(nodes):
         return django.http.HttpResponse(nodes[0].render(request))
     if url == "" or url == "/":
-        return django.http.HttpResponse(appomatic_renderable.models.Node.render_list(request))
+        return django.http.HttpResponse(appomatic_renderable.models.Node.list_render(request))
     else:
         raise Exception("Unknown path %s" % url)
 
