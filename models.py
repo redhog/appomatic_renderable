@@ -18,6 +18,7 @@ from django.db.models import Q
 from django.conf import settings
 import csv
 import StringIO
+import urllib
 
 def get_typename(t, separator = "."):
     return ("%s.%s" % (t.__module__, t.__name__)).replace(".", separator)
@@ -192,6 +193,14 @@ class Renderable(fcdjangoutils.modelhelpers.SubclasModelMixin):
 class Tag(mptt.models.MPTTModel, Renderable):
     name = django.db.models.CharField(max_length=128)
     parent = mptt.models.TreeForeignKey('self', null=True, blank=True, related_name='children')
+    url = django.db.models.CharField(max_length=1024, null=True, blank=True, unique=True)
+
+    def save(self, *arg, **kw):
+        if self.parent:
+            self.url = '/'.join(self.parent.url.split("/") + [urllib.quote(self.name.encode("utf-8"))])
+        else:
+            self.url = '/' + urllib.quote(self.name.encode("utf-8"))
+        mptt.models.MPTTModel.save(self, *arg, **kw)
 
     @property
     def pure_children(self):
@@ -213,7 +222,7 @@ class Tag(mptt.models.MPTTModel, Renderable):
         if len(nodes):
             return nodes[0].get_absolute_url()
         else:
-            return django.core.urlresolvers.reverse('appomatic_renderable.views.tag', kwargs={'name': django.utils.http.urlquote_plus(self.name)})
+            return django.core.urlresolvers.reverse('appomatic_renderable.views.tag', kwargs={'url': self.url})
 
     def breadcrumb(self, include_self=False):
         return self.get_ancestors(include_self=include_self)

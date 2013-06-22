@@ -12,9 +12,9 @@ def node(request, url):
     else:
         raise Exception("Unknown path %s" % url)
 
-def tag(request, name):
-    name=urllib.unquote_plus(name).decode('utf8')
-    if name == "" or name == "/":
+def tag(request, url):
+    if not url.startswith("/"): url = "/" + url
+    if url == "" or url == "/":
         return django.http.HttpResponse(appomatic_renderable.models.Tag.render_list(request))
     else:
-        return django.http.HttpResponse(appomatic_renderable.models.Tag.objects.get(name=urllib.unquote_plus(name).decode('utf8')).render(request))
+        return django.http.HttpResponse(appomatic_renderable.models.Tag.objects.get(url=url).render(request))
