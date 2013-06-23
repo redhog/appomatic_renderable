@@ -204,8 +204,7 @@ class Tag(mptt.models.MPTTModel, Renderable):
 
     @property
     def pure_children(self):
-        return self.children.all()
-        # return self.children.annotate(node_nr=django.db.models.Count('node')).filter(node_nr=0)
+        return self.children.annotate(node_nr=django.db.models.Count('node')).filter(node_nr=0)
 
     class Meta:
         unique_together = (("name", "parent"),)
@@ -287,7 +286,7 @@ class Node(django.db.models.Model, Renderable):
     license = django.db.models.ForeignKey(License, null=True, blank=True)
     author = django.db.models.ForeignKey(django.contrib.auth.models.User, null=True, blank=True)
 
-    # tag = fcdjangoutils.fields.WeakForeignKey(Tag, db_column="title", to_field="name", related_name="node")
+    tag = fcdjangoutils.fields.WeakForeignKey(from_field="title", to=Tag, to_field="name", related_name="node")
 
     @fcdjangoutils.modelhelpers.subclassproxy
     def __unicode__(self):
