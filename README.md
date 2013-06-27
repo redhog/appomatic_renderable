@@ -3,7 +3,10 @@
 A mini cms framework to make django models easily "renderable" using templates
 
 
-# Mini-tutorial
+# Dependencies
+
+    https://github.com/redhog/fcdjangoutils
+
 # Preparing the models
 Add the mixin appomatic_renderable.models.Renderable to the superclasses of your model.
 
