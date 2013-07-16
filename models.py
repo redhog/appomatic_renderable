@@ -221,7 +221,7 @@ class Tag(mptt.models.MPTTModel, Renderable):
         if len(nodes):
             return nodes[0].get_absolute_url()
         else:
-            return django.core.urlresolvers.reverse('appomatic_renderable.views.tag', kwargs={'url': self.url})
+            return django.core.urlresolvers.reverse('appomatic_renderable.views.tag', kwargs={'url': urllib.unquote(self.url)})
 
     def breadcrumb(self, include_self=False):
         return self.get_ancestors(include_self=include_self)
