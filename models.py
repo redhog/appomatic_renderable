@@ -77,7 +77,7 @@ class Renderable(fcdjangoutils.modelhelpers.SubclasModelMixin):
             return {}
 
     @fcdjangoutils.modelhelpers.subclassproxy
-    def render(self, request, style = None, context_arg = {}):
+    def render(self, request, style = None, context_arg = {}, as_response = False):
         if style is None:
             style = request.GET.get("style", "page.html")
             if '/' in style or style in (".", ".."): raise Exception("Bad style")
@@ -90,16 +90,28 @@ class Renderable(fcdjangoutils.modelhelpers.SubclasModelMixin):
 
         method = 'render__' + style.replace(".", "__")
         if hasattr(self, method):
-            return getattr(self, method)(request, context)
+            res = getattr(self, method)(request, context)
         else:
-            return django.template.loader.select_template(
+            res = django.template.loader.select_template(
                 ["%s%s/%s" % (t.replace(".", "/"), subtype, style)
                  for t in get_basetypes(type(self))]
                 ).render(
                 django.template.RequestContext(
                         request,
                         context))
-    
+
+        # res can be either string or HttpResponse object. We might
+        # need either. So, convert as required...
+
+        if isinstance(res, django.http.HttpResponse):
+            if not as_response:
+                res = res.content
+        else:
+            if as_response:
+                res = django.http.HttpResponse(res)
+
+        return res
+
     def render__adminlink__html(self, request, context):
         # Handle translation here
         return u"<a href='%s'>Edit</a>" % (self.get_admin_url(),)
@@ -153,7 +165,7 @@ class Renderable(fcdjangoutils.modelhelpers.SubclasModelMixin):
             return {}
 
     @classmethod
-    def list_render(cls, request, style = None, context_arg = {}):
+    def list_render(cls, request, style = None, context_arg = {}, as_response = False):
         if style is None:
             style = request.GET.get("style", "page.html")
             if '/' in style or style in (".", ".."): raise Exception("Bad style")
@@ -166,15 +178,27 @@ class Renderable(fcdjangoutils.modelhelpers.SubclasModelMixin):
 
         method = 'list_render__' + style.replace(".", "__")
         if hasattr(cls, method):
-            return getattr(cls, method)(request, context)
+            res = getattr(cls, method)(request, context)
         else:
-            return django.template.loader.select_template(
+            res = django.template.loader.select_template(
                 ["%s-list/%s" % (t.replace(".", "/"), style)
                  for t in get_basetypes(cls)]
                 ).render(
                 django.template.RequestContext(
                         request,
                         context))
+
+        # res can be either string or HttpResponse object. We might
+        # need either. So, convert as required...
+
+        if isinstance(res, django.http.HttpResponse):
+            if not as_response:
+                res = res.content
+        else:
+            if as_response:
+                res = django.http.HttpResponse(res)
+
+        return res
 
     @classmethod
     def list_render__csv(cls, request, context):
