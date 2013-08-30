@@ -4,7 +4,9 @@ import mptt.admin
 import autocomplete.widgets
 import fcdjangoutils.fields
 
-django.contrib.admin.site.register(appomatic_renderable.models.Tag, mptt.admin.MPTTModelAdmin)
+class TagAdmin(mptt.admin.MPTTModelAdmin):
+    exclude = ('url',)
+django.contrib.admin.site.register(appomatic_renderable.models.Tag, TagAdmin)
 class NodeAdmin(autocomplete.widgets.AutocompleteModelAdmin):
     # exclude = ('tag',)
     list_display = ('published', 'title', 'source', 'license', 'author', 'url')
