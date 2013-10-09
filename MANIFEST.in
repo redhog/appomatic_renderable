@@ -1,0 +1,6 @@
+include __info__.py
+recursive-include appomatic_renderable/templates *
+recursive-include appomatic_renderable/static *
+exclude *.pyc
+exclude *~
+
