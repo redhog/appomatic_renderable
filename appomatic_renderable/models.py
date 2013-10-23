@@ -26,7 +26,7 @@ def get_typename(t, separator = "."):
 def get_basetypes(t, separator = "."):
     basetypes = []
     def get_basetypes(t):
-        basetypes.append(get_typename(t))
+        basetypes.append(get_typename(t, separator))
         for tt in t.__bases__:
             get_basetypes(tt)
     get_basetypes(t)

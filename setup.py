@@ -23,7 +23,7 @@ setup(
     description = "Renderable is a mini cms framework to make django models easily 'renderable' using templates.",
     keywords = "appomatic django cms",
     install_requires = ['appomaticcore', 'appomatic_autocomplete', 'appomatic_ckeditor'],
-    version = "0.0.3",
+    version = "0.0.4",
     author = "RedHog (Egil Moeller)",
     author_email = "egil.moller@piratpartiet.se",
     license = "GPL",
