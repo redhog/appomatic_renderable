@@ -19,6 +19,7 @@ from django.conf import settings
 import csv
 import StringIO
 import urllib
+import uuid
 
 def get_typename(t, separator = "."):
     return ("%s.%s" % (t.__module__, t.__name__)).replace(".", separator)
@@ -217,13 +218,15 @@ class Renderable(fcdjangoutils.modelhelpers.SubclasModelMixin):
 class Tag(mptt.models.MPTTModel, Renderable):
     name = django.db.models.CharField(max_length=128)
     parent = mptt.models.TreeForeignKey('self', null=True, blank=True, related_name='children')
-    url = django.db.models.CharField(max_length=1024, null=True, blank=True, unique=True)
+    url = django.db.models.CharField(max_length=1024, null=True, blank=True)
+    guuid = django.db.models.CharField(max_length=64, null=False, blank=True, db_index=True)
 
     def save(self, *arg, **kw):
         if self.parent:
             self.url = '/'.join(self.parent.url.split("/") + [urllib.quote(self.name.encode("utf-8"))])
         else:
             self.url = '/' + urllib.quote(self.name.encode("utf-8"))
+        self.guuid = str(uuid.uuid5(uuid.NAMESPACE_URL, self.url))
         mptt.models.MPTTModel.save(self, *arg, **kw)
 
     @property
@@ -302,7 +305,8 @@ class License(django.db.models.Model):
         return "<a href='%s'>%s</a>" % (self.url, self.name)
 
 class Node(django.db.models.Model, Renderable):
-    url = django.db.models.CharField(max_length=1024, unique=True)
+    url = django.db.models.CharField(max_length=1024)
+    guuid = django.db.models.CharField(max_length=64, null=False, blank=True, db_index=True)
     tags = django.db.models.ManyToManyField(Tag, null=True, blank=True, related_name='nodes')
     title = django.db.models.CharField(max_length=128, db_index=True)
     published = django.db.models.DateTimeField(default=datetime.datetime.now, null=True, blank=True, db_index=True)
@@ -311,6 +315,10 @@ class Node(django.db.models.Model, Renderable):
     author = django.db.models.ForeignKey(django.contrib.auth.models.User, null=True, blank=True)
 
     tag = fcdjangoutils.fields.WeakForeignKey(from_field="title", to=Tag, to_field="name", related_name="node")
+
+    def save(self, *arg, **kw):
+        self.guuid = str(uuid.uuid5(uuid.NAMESPACE_URL, self.url))
+        django.db.models.Model.save(self, *arg, **kw)
 
     @fcdjangoutils.modelhelpers.subclassproxy
     def __unicode__(self):
