@@ -65,7 +65,7 @@ class Renderable(fcdjangoutils.modelhelpers.SubclasModelMixin):
             def __getattribute__(self, style):
                 style = style.replace("__", ".")
                 if "." not in style: style = style + ".html"
-                return obj.render(fcdjangoutils.middleware.get_request(), style)
+                return obj.render(None, style)
         return Res()
 
     def context(self, request, style):
@@ -79,7 +79,9 @@ class Renderable(fcdjangoutils.modelhelpers.SubclasModelMixin):
             return {}
 
     @fcdjangoutils.modelhelpers.subclassproxy
-    def render(self, request, style = None, context_arg = {}, as_response = False):
+    def render(self, request = None, style = None, context_arg = {}, as_response = False):
+        if request is None:
+            request = fcdjangoutils.middleware.get_request()
         if style is None:
             style = request.GET.get("style", "page.html")
             if '/' in style or style in (".", ".."): raise Exception("Bad style")
