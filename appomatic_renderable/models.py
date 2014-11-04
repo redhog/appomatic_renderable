@@ -72,7 +72,8 @@ class Renderable(fcdjangoutils.modelhelpers.SubclasModelMixin):
         return {'obj': self.subclassobject}
 
     def handle_methods(self, request, style):
-        method = 'handle__' + request.REQUEST.get('method', 'read')
+        method = 'handle__' + request.REQUEST.get(self.fieldname + 'method', 'read')
+
         if hasattr(self, method):
             return getattr(self, method)(request, style)
         else:
@@ -121,7 +122,10 @@ class Renderable(fcdjangoutils.modelhelpers.SubclasModelMixin):
         return u"<a href='%s'>Edit</a>" % (self.get_admin_url(),)
 
     def render__link__html(self, request, context):
-        return u"<a href='%s'>%s</a>" % (self.get_absolute_url(), self)
+        return u"<a href='%s'>%s</a>" % (self.get_absolute_url(), self.render(style="title"))
+
+    def render__title(self, request, context):
+        return unicode(self)
 
     def render__oembedlink__html(self, request, context):
         return u"""
@@ -129,7 +133,7 @@ class Renderable(fcdjangoutils.modelhelpers.SubclasModelMixin):
           <link rel='alternate' type='text/xml+oembed' href='%(url)s?style=oembed&format=xml' title='%(title)s' />
         """ % {
             'url': self.get_absolute_url() + "",
-            'title': self}
+            'title': self.render(style="title")}
 
     def render__oembed(self, request, context):
         format = request.GET.get('format', 'json')
@@ -217,6 +221,10 @@ class Renderable(fcdjangoutils.modelhelpers.SubclasModelMixin):
             w.writerow([row[col] for col in header])
         return f.getvalue()
 
+    @property
+    def fieldname(self):
+        return "%s-%s-" % (self.type, self.id)
+
 class Tag(mptt.models.MPTTModel, Renderable):
     name = django.db.models.CharField(max_length=128)
     parent = mptt.models.TreeForeignKey('self', null=True, blank=True, related_name='children')
@@ -228,7 +236,7 @@ class Tag(mptt.models.MPTTModel, Renderable):
             self.url = '/'.join(self.parent.url.split("/") + [urllib.quote(self.name.encode("utf-8"))])
         else:
             self.url = '/' + urllib.quote(self.name.encode("utf-8"))
-        self.guuid = str(uuid.uuid5(uuid.NAMESPACE_URL, self.url))
+        self.guuid = str(uuid.uuid5(uuid.NAMESPACE_URL, str(self.url)))
         mptt.models.MPTTModel.save(self, *arg, **kw)
 
     @property
