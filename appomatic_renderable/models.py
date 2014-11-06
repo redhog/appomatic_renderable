@@ -62,7 +62,7 @@ class Renderable(fcdjangoutils.modelhelpers.SubclasModelMixin):
     def render_as(self):
         obj = self
         class Res(object):
-            def __getattribute__(self, style):
+            def __getattr__(self, style):
                 style = style.replace("__", ".")
                 if "." not in style: style = style + ".html"
                 return obj.render(None, style)
