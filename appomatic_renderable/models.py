@@ -72,6 +72,10 @@ class Renderable(fcdjangoutils.modelhelpers.SubclasModelMixin):
         return {'obj': self.subclassobject}
 
     def handle_methods(self, request, style):
+        if not hasattr(request, 'renderable_handled_methods'): request.renderable_handled_methods = set()
+        if self.fieldname in request.renderable_handled_methods: return {}
+        request.renderable_handled_methods.add(self.fieldname)
+
         method = 'handle__' + request.REQUEST.get(self.fieldname + 'method', 'read')
 
         if hasattr(self, method):
