@@ -63,9 +63,7 @@ class Renderable(fcdjangoutils.modelhelpers.SubclasModelMixin):
         obj = self
         class Res(object):
             def __getattr__(self, style):
-                style = style.replace("__", ".")
-                if "." not in style: style = style + ".html"
-                return obj.render(None, style)
+                return obj.render(None, style.replace("__", "."))
         return Res()
 
     def context(self, request, style):
@@ -101,6 +99,8 @@ class Renderable(fcdjangoutils.modelhelpers.SubclasModelMixin):
         if hasattr(self, method):
             res = getattr(self, method)(request, context)
         else:
+            if '.' not in style:
+                style = style + '.html'
             res = django.template.loader.select_template(
                 ["%s%s/%s" % (t.replace(".", "/"), subtype, style)
                  for t in get_basetypes(type(self))]
