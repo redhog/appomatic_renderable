@@ -4,6 +4,7 @@ import fcdjangoutils.modelhelpers
 import fcdjangoutils.middleware
 import fcdjangoutils.fields
 import fcdjangoutils.jsonview
+import fcdjangoutils.responseutils
 import datetime
 import django.template
 import django.utils.http
@@ -20,6 +21,7 @@ import csv
 import StringIO
 import urllib
 import uuid
+import traceback
 
 def get_typename(t, separator = "."):
     return ("%s.%s" % (t.__module__, t.__name__)).replace(".", separator)
@@ -63,7 +65,14 @@ class Renderable(fcdjangoutils.modelhelpers.SubclasModelMixin):
         obj = self
         class Res(object):
             def __getattr__(self, style):
-                return obj.render(None, style.replace("__", "."))
+                try:
+                    return obj.render(None, style.replace("__", "."))
+                except fcdjangoutils.responseutils.EarlyResponseException, e:
+                    raise
+                except Exception, e:
+                    print e
+                    traceback.print_exc()
+                    return ""
         return Res()
 
     def context(self, request, style):
