@@ -47,18 +47,13 @@ class Renderable(fcdjangoutils.modelhelpers.SubclasModelMixin):
 
     @fcdjangoutils.modelhelpers.subclassproxy
     @property
-    def types(self):
+    def class_names(self):
         return ' '.join(get_basetypes(TypeType(self), "-"))
 
     @fcdjangoutils.modelhelpers.subclassproxy
     @property
-    def type(self):
+    def class_name(self):
         return get_typename(TypeType(self), "-")
-
-    @fcdjangoutils.modelhelpers.subclassproxy
-    @property
-    def type_name(self):
-        return TypeType(self).__name__
 
     @fcdjangoutils.modelhelpers.subclassproxy
     def render_as(self):
@@ -236,7 +231,7 @@ class Renderable(fcdjangoutils.modelhelpers.SubclasModelMixin):
 
     @property
     def fieldname(self):
-        return "%s-%s-" % (self.type, self.id)
+        return "%s-%s-" % (self.class_name, self.id)
 
 class Tag(mptt.models.MPTTModel, Renderable):
     name = django.db.models.CharField(max_length=128)

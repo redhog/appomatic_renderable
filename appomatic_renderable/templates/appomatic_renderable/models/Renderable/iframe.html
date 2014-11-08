@@ -1,6 +1,6 @@
 {% extends 'appomatic_renderable/base.html' %}
 
-{% block body_class %}{{obj.types}}{% endblock %}
+{% block body_class %}{{obj.class_names}}{% endblock %}
 
 {% block body %}
   {{obj.render_as.excerpt}}
