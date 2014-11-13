@@ -130,7 +130,20 @@ class Renderable(fcdjangoutils.modelhelpers.SubclasModelMixin):
         return u"<a href='%s'>Edit</a>" % (self.get_admin_url(),)
 
     def render__link__html(self, request, context):
-        return u"<a href='%s'>%s</a>" % (self.get_absolute_url(), self.render(style="title"))
+        title = self.render(style="title")
+        try:
+            url = self.get_absolute_url()
+        except:
+            return title
+        return u"<a href='%s'>%s</a>" % (url, title)
+
+    def render__link__txt(self, request, context):
+        title = self.render(style="title")
+        try:
+            url = self.get_absolute_url()
+        except:
+            return title
+        return u"%s [%s]" % (title, url)
 
     def render__title(self, request, context):
         return unicode(self)
