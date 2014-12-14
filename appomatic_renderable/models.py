@@ -181,6 +181,30 @@ class Renderable(fcdjangoutils.modelhelpers.SubclasModelMixin):
             'height': self.oembedheight
             }
 
+    def render__opengraph__html(self, request, context):
+        res = []
+        def write(node, prefix=""):
+            if isinstance(node, dict):
+                p = prefix and (prefix + ":") or ""
+                for key, value in node.iteritems():
+                    write(value, p + key)
+            elif isinstance(node, list):
+                for item in node:
+                    write(item, prefix)
+            else:
+                res.append("<meta property='%s' content='%s' />" % (prefix, node))
+
+        write(self.opengraph(request, context))
+        return "\n".join(res)
+
+    def opengraph(self, request, context):
+        return {
+            "og": {
+                "type": "website",
+                "description": unicode(self)
+                }
+            }
+
     @classmethod
     def list_context(cls, request, style):
         return {"objs": cls.objects.all()}
